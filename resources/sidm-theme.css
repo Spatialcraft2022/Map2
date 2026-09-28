@@ -1,7 +1,10 @@
 /* ─────────────────────────────────────────────────────────────
-   SIDM map theme — applied over the stock qgis2web/OpenLayers
-   export. Visual layer only: colors, fonts, radius, shadows.
-   No control positions, layers, or behaviour are touched.
+   SIDM map shell — applied over the stock qgis2web/OpenLayers
+   export. qgis2web/OL stays the offline engine (map init, GeoJSON
+   layers, click-identify popup, measure/geolocate logic); this file
+   + resources/sidm-shell.js replace its default scattered corner
+   widgets with the real SIDM chrome: top bar, layers card, module
+   dock, bottom bar.
    ───────────────────────────────────────────────────────────── */
 
 :root {
@@ -25,61 +28,258 @@
   --radius-sm: 7px;
   --radius-pill: 40px;
 
+  --topbar-h: 48px;
+  --bottombar-h: 26px;
+
   --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
 }
 
 html, body {
-  background-color: var(--bg) !important;
-  font-family: var(--font-primary) !important;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--bg);
+  font-family: var(--font-primary);
   color: var(--text-primary);
 }
 
-/* ── Generic OL controls (zoom, geocoder, measure, search) ───── */
-.ol-control {
-  background: var(--glass) !important;
+/* ── Shell ─────────────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.shell-body {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-area {
+  position: absolute;
+  inset: 0;
+}
+#map { width: 100%; height: 100%; }
+
+/* ── Top bar ───────────────────────────────────────────────── */
+.top-bar {
+  height: var(--topbar-h);
+  flex-shrink: 0;
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  z-index: 300;
+  position: relative;
+}
+.top-bar-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.top-bar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.top-bar-site-name {
+  font-size: 14px; font-weight: 600; letter-spacing: 0.2px;
+  color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.top-bar-offline-badge {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+}
+
+/* ── Bottom bar ────────────────────────────────────────────── */
+.bottom-bar {
+  height: var(--bottombar-h);
+  flex-shrink: 0;
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 16px;
+  z-index: 200;
+}
+.bottom-bar-scale .ol-scale-line {
+  position: static !important;
+  background: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+.bottom-bar-scale .ol-scale-line-inner {
+  border: 1px solid rgba(255,255,255,0.25) !important;
+  border-top: none !important;
+  background: none !important;
+  color: rgba(255,255,255,0.5) !important;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  padding: 1px 4px;
+}
+.bottom-bar-coords {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(255,255,255,0.50);
+  margin-left: auto;
+  white-space: nowrap;
+}
+.bottom-bar-attribution { font-size: 10px; color: rgba(255,255,255,0.42); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bottom-bar-attribution .bottom-attribution { position: static !important; background: none !important; box-shadow: none !important; padding: 0 !important; }
+.bottom-bar-attribution a { color: var(--accent); text-decoration: none; }
+.bottom-bar-attribution a:hover { text-decoration: underline; }
+.bottom-bar-attribution ul { margin: 0; padding: 0; display: flex; list-style: none; }
+
+/* ── Layers card (top-right, collapsible) ─────────────────── */
+.layers-card {
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 230px;
+  max-height: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
+  background: var(--glass);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border-strong);
-  border-radius: var(--radius-md) !important;
-  box-shadow: var(--shadow-card);
-  padding: 4px !important;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+  z-index: 150;
+  overflow: hidden;
+}
+.layers-card--collapsed { max-height: 46px; }
+.layers-card-header {
+  height: 46px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 12px 0 14px;
+  cursor: pointer; user-select: none;
+  border-bottom: 1px solid var(--glass-border);
+}
+.layers-card--collapsed .layers-card-header { border-bottom-color: transparent; }
+.layers-card-header-icon {
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.layers-card-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+  color: var(--text-primary); flex: 1;
+}
+.layers-card-count {
+  font-size: 10px; background: rgba(255,255,255,0.08); border-radius: 10px;
+  padding: 1px 7px; color: rgba(255,255,255,0.45); font-weight: 600;
+}
+.layers-card-chevron {
+  width: 16px; height: 16px; color: rgba(255,255,255,0.4);
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); flex-shrink: 0;
+}
+.layers-card--collapsed .layers-card-chevron { transform: rotate(-90deg); }
+.layers-card-body {
+  flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 0;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+.layers-card--collapsed .layers-card-body { display: none; }
+
+.layer-item { display: flex; flex-direction: column; margin: 1px 4px; border-radius: var(--radius-sm); transition: background 0.12s; }
+.layer-item:hover { background: rgba(255,255,255,0.04); }
+.layer-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 7px 8px; }
+.layer-toggle input[type="checkbox"] { accent-color: var(--accent); flex-shrink: 0; }
+.layer-swatch { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.layer-swatch-img { width: 18px; height: 18px; object-fit: contain; border-radius: 3px; display: block; }
+.layer-name { font-size: 12px; color: var(--text-primary); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.layer-name--off { opacity: 0.38; }
+
+/* ── Module dock (bottom-right pill) ──────────────────────── */
+.module-dock {
+  position: absolute;
+  bottom: 14px; right: 12px;
+  display: flex; flex-direction: row; align-items: center;
+  gap: 5px;
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-pill);
+  padding: 5px 8px;
+  box-shadow: var(--shadow-float);
+  z-index: 140;
+}
+.dock-btn-wrap { position: relative; display: flex; }
+.dock-btn-wrap::before {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur-sm);
+  border: 1px solid var(--glass-border-strong);
+  color: var(--text-primary);
+  font-size: 10px; font-weight: 700; white-space: nowrap;
+  padding: 4px 9px; border-radius: var(--radius-sm);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+  letter-spacing: 0.3px; text-transform: uppercase;
+  box-shadow: var(--shadow-sm);
+}
+.dock-btn-wrap:hover::before { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.dock-btn, .measure-button, .geolocate-button {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.55);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s, color 0.15s, transform 0.15s, border-color 0.15s;
+}
+.dock-btn:hover, .measure-button:hover, .geolocate-button:hover {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+.dock-btn--active, .measure-button--active {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
 }
 
-.ol-control > * {
-  background-color: transparent !important;
-  color: var(--text-primary) !important;
-  border-radius: var(--radius-sm) !important;
-  font-family: var(--font-primary);
+/* qgis2web's measure control ships a hidden <label><select> pair that
+   toggles visible when measuring — sidm-shell.js relocates it into
+   the dock and tags it .dock-measure-select; style it as a small
+   dock chip instead of the default browser form controls. */
+.dock-measure-select {
+  display: flex; align-items: center;
+  font-size: 10px; color: rgba(255,255,255,0.55);
+  white-space: nowrap;
 }
-
-.ol-control button {
-  background: rgba(255, 255, 255, 0.06) !important;
-  color: var(--text-primary) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+.dock-measure-select select {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 2px 4px;
+  margin-left: 4px;
 }
-
-.ol-control > *:focus,
-.ol-control > *:hover,
-.ol-control button:hover {
-  background-color: color-mix(in srgb, var(--accent) 25%, transparent) !important;
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-  color: var(--accent) !important;
-}
-
-.ol-attribution a,
-.gcd-gl-input::placeholder,
-.search-layer-input-search::placeholder {
-  color: rgba(255, 255, 255, 0.45) !important;
-}
-
-.search-layer-input-search,
-.gcd-gl-input {
-  background-color: rgba(255, 255, 255, 0.06) !important;
-  color: var(--text-primary) !important;
-  border: 1px solid var(--glass-border-strong) !important;
-}
+.measure-control, .geolocate { display: none !important; }
 
 /* ── Popup (plot-info style: dark glass card, pinned close,
    scrolling body) ─────────────────────────────────────────── */
@@ -93,15 +293,8 @@ html, body {
   color: var(--text-primary);
   font-family: var(--font-primary);
 }
-
-.ol-popup:after {
-  border-top-color: var(--glass) !important;
-}
-
-.ol-popup:before {
-  border-top-color: var(--glass-border-strong) !important;
-}
-
+.ol-popup:after { border-top-color: var(--glass) !important; }
+.ol-popup:before { border-top-color: var(--glass-border-strong) !important; }
 .ol-popup-closer {
   color: rgba(255, 255, 255, 0.35) !important;
   font-family: var(--font-primary) !important;
@@ -109,117 +302,38 @@ html, body {
   top: 8px !important;
   right: 10px !important;
 }
+.ol-popup-closer:hover { color: var(--accent) !important; }
+#popup-content { color: var(--text-primary); font-size: 12.5px; }
+#popup-content > ul > li > a { border-bottom: 1px solid var(--glass-border-strong); color: var(--text-primary); }
+#popup-content th, #popup-content td, th, td { color: var(--text-primary) !important; }
+th { color: rgba(255, 255, 255, 0.5) !important; font-weight: 600; }
+#popup-content > table { border-collapse: collapse; }
 
-.ol-popup-closer:hover {
-  color: var(--accent) !important;
-}
-
-#popup-content {
-  color: var(--text-primary);
-  font-size: 12.5px;
-}
-
-#popup-content > ul > li > a {
-  border-bottom: 1px solid var(--glass-border-strong);
-  color: var(--text-primary);
-}
-
-#popup-content th,
-#popup-content td,
-th, td {
-  color: var(--text-primary) !important;
-}
-
-th {
-  color: rgba(255, 255, 255, 0.5) !important;
-  font-weight: 600;
-}
-
-#popup-content > table {
-  border-collapse: collapse;
-}
-
-/* ── Layer switcher (dock-subpanel style) ─────────────────── */
-.layer-switcher,
-.layer-switcher.shown.layer-switcher-activation-mode-click > button {
-  background-color: var(--glass) !important;
-  color: var(--text-primary) !important;
-  border-radius: var(--radius-md) !important;
-  border: 1px solid var(--glass-border-strong);
-}
-
-.layer-switcher:hover {
-  background-color: var(--glass-light) !important;
-}
-
-.layer-switcher .panel {
-  background-color: var(--glass) !important;
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-radius: var(--radius-md) !important;
-  border: 1px solid var(--glass-border-strong);
-  box-shadow: var(--shadow-float);
-  color: var(--text-primary);
-}
-
-.layer-switcher label,
-.layer-switcher li {
-  color: var(--text-primary) !important;
-}
-
-.layer-switcher input[type="checkbox"],
-.layer-switcher input[type="radio"] {
-  accent-color: var(--accent);
-}
-
-/* ── Scale line ────────────────────────────────────────────── */
-.ol-scale-line {
-  background: none !important;
-}
-.ol-scale-line-inner {
-  border-color: rgba(255, 255, 255, 0.5) !important;
-  background: var(--glass) !important;
-  color: var(--text-primary) !important;
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-  padding: 1px 4px;
-}
-
-/* ── Measurement tooltip ───────────────────────────────────── */
+/* ── Measurement draw tooltip (on-map, not the dock chip) ──── */
 .tooltip {
   background: var(--glass);
   border: 1px solid var(--glass-border-strong);
   color: var(--text-primary);
   border-radius: var(--radius-sm);
 }
-.tooltip-static {
-  background-color: var(--accent);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-.tooltip-measure:before,
-.tooltip-static:before {
-  border-top-color: var(--glass);
-}
-.tooltip-static:before {
-  border-top-color: var(--accent);
-}
+.tooltip-static { background-color: var(--accent); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); }
+.tooltip-measure:before, .tooltip-static:before { border-top-color: var(--glass); }
+.tooltip-static:before { border-top-color: var(--accent); }
 
-/* ── Project title / abstract overlays ────────────────────── */
+.fa-exclamation-triangle { color: #fbbf24 !important; }
+
+/* ── Retire qgis2web's default scattered corner widgets — the
+   shell above replaces them. sidm-shell.js relocates the buttons
+   it still needs (measure, geolocate) into the module dock before
+   this hides their old containers. ─────────────────────────── */
+#top-left-container,
+#bottom-left-container,
+#top-right-container,
+#bottom-right-container,
+.ol-zoom,
+.layer-switcher,
 .project-title,
 .project-abstract,
 .project-abstract-uncollapsed {
-  background-color: var(--glass) !important;
-  color: var(--text-primary) !important;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border-strong);
-  font-family: var(--font-primary);
-}
-
-/* ── Bottom attribution strip ──────────────────────────────── */
-.bottom-attribution a {
-  color: var(--accent) !important;
-}
-
-.fa-exclamation-triangle {
-  color: #fbbf24 !important;
+  display: none !important;
 }
