@@ -43,7 +43,16 @@
                         <span class="layers-card-count" id="layersCardCount"></span>
                         <svg class="layers-card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
-                    <div class="layers-card-body" id="layersCardBody"></div>
+                    <div class="layers-card-body">
+                        <div class="layers-tabs" id="layersTabs">
+                            <button class="layers-tab layers-tab--active" data-tab="layers">Layers</button>
+                            <button class="layers-tab" data-tab="base">Base</button>
+                        </div>
+                        <div class="layers-tab-panel" id="layersCardBody"></div>
+                        <div class="layers-tab-panel" id="baseTabPanel" style="display:none">
+                            <div class="basemap-options" id="basemapOptions"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="module-dock" id="moduleDock"></div>
