@@ -324,26 +324,69 @@ html, body {
   color: #fff !important;
 }
 
-/* qgis2web's measure control ships a hidden <label><select> pair that
-   toggles visible when measuring — sidm-shell.js relocates it into
-   the dock and tags it .dock-measure-select; style it as a small
-   dock chip instead of the default browser form controls. */
-.dock-measure-select {
-  display: flex; align-items: center;
-  font-size: 10px; color: rgba(255,255,255,0.55);
-  white-space: nowrap;
-}
-.dock-measure-select select {
-  background: rgba(255,255,255,0.08);
-  color: var(--text-primary);
-  border: 1px solid var(--glass-border-strong);
-  border-radius: 4px;
-  font-size: 11px;
-  font-family: inherit;
-  padding: 2px 4px;
-  margin-left: 4px;
-}
+/* qgis2web's own measure control is unused — sidm-shell.js builds a
+   from-scratch measure tool matching the live SIDM app instead. */
 .measure-control, .geolocate { display: none !important; }
+
+/* ── Dock subpanel (Measure, etc.) — floats above the dock,
+   exactly like the live SIDM app's ModuleDock subpanel ────────── */
+.dock-subpanel {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  width: 240px;
+  max-height: min(480px, calc(100vh - var(--topbar-h) - var(--bottombar-h) - 70px));
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.12) transparent;
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+  padding: 14px;
+  z-index: 145;
+}
+.dock-subpanel-header { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.dock-subpanel-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;
+  color: rgba(255,255,255,0.52);
+}
+.dock-subpanel-close {
+  margin-left: auto; width: 22px; height: 22px;
+  background: none; border: none;
+  color: rgba(255,255,255,0.35);
+  font-size: 16px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px;
+}
+.dock-subpanel-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.08); }
+
+/* ── Measure tool ──────────────────────────────────────────── */
+.measure-btns { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+.measure-btn {
+  flex: 1; padding: 6px 0;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm); color: rgba(255,255,255,0.45);
+  cursor: pointer; transition: all 0.15s; min-width: 52px; font-family: inherit;
+}
+.measure-btn.active, .measure-btn:hover {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.measure-hint { font-size: 10px; color: rgba(255,255,255,0.28); line-height: 1.45; margin: 0; }
+.measure-result {
+  margin-top: 8px; padding: 7px 10px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 700;
+  color: var(--accent); text-align: center;
+}
 
 /* ── Popup (plot-info style: dark glass card, pinned close,
    scrolling body) ─────────────────────────────────────────── */
